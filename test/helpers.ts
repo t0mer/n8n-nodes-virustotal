@@ -79,3 +79,35 @@ export function fakeExecute(options: FakeExecuteOptions) {
 	};
 	return { fn: fn as unknown as import('n8n-workflow').IExecuteFunctions, calls };
 }
+
+export interface FakePollOptions {
+	params: Record<string, unknown>;
+	responses: FakeResponse[];
+	staticData?: Record<string, unknown>;
+	mode?: 'manual' | 'trigger';
+	credentials?: Record<string, unknown>;
+}
+
+/** A minimal IPollFunctions with persistent static data. */
+export function fakePoll(options: FakePollOptions) {
+	const { ctx, calls } = fakeContext(options.responses);
+	const fn = ctx as unknown as Record<string, unknown>;
+	const staticData = options.staticData ?? {};
+	fn.getNodeParameter = (name: string, fallback?: unknown) => {
+		const value = options.params[name];
+		if (value !== undefined) return value;
+		if (fallback !== undefined) return fallback;
+		throw new Error(`Could not get parameter "${name}"`);
+	};
+	fn.getCredentials = async () => ({
+		apiKey: 'test-key',
+		tier: 'public',
+		requestsPerMinute: 4,
+		...options.credentials,
+	});
+	fn.getMode = () => options.mode ?? 'trigger';
+	fn.getWorkflowStaticData = () => staticData;
+	(fn.helpers as Record<string, unknown>).returnJsonArray = (items: unknown[]) =>
+		items.map((json) => ({ json }));
+	return { fn: fn as unknown as import('n8n-workflow').IPollFunctions, calls, staticData };
+}
