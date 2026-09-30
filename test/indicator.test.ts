@@ -66,6 +66,20 @@ describe('detectIndicator: urls', () => {
 		});
 	});
 
+	it('treats host:port as a URL', () => {
+		expect(ok('example.com:8080')).toMatchObject({
+			type: 'url',
+			indicator: 'http://example.com:8080',
+		});
+		expect(ok('1.2.3.4:80/x')).toMatchObject({ type: 'url', indicator: 'http://1.2.3.4:80/x' });
+		expect(ok('[::1]:8080')).toMatchObject({ type: 'url' });
+	});
+
+	it('still treats a bare IPv6 address as an IP, not host:port', () => {
+		expect(ok('2001:db8::1').type).toBe('ip_address');
+		expect(ok('::1').type).toBe('ip_address');
+	});
+
 	it('keeps case in the path', () => {
 		expect(ok('http://Example.com/AbC').indicator).toBe('http://Example.com/AbC');
 	});
@@ -154,6 +168,13 @@ describe('detectIndicator: force type', () => {
 		expect(ok('https://Sub.Example.com/path', 'domain')).toMatchObject({
 			type: 'domain',
 			indicator: 'sub.example.com',
+		});
+	});
+
+	it('forces a domain from host:port', () => {
+		expect(ok('Example.com:8080', 'domain')).toMatchObject({
+			type: 'domain',
+			indicator: 'example.com',
 		});
 	});
 

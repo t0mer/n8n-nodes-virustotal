@@ -96,6 +96,9 @@ function hostnameFromUrl(value: string): string | null {
 	}
 }
 
+/** A host followed by a path, query, fragment or port: `example.com/x`, `example.com:8080`. */
+const HOST_WITH_SUFFIX = /^[^/?#\s]+([/?#]|:\d{1,5}([/?#]|$))/;
+
 function hasScheme(value: string): boolean {
 	return /^[a-z][a-z0-9+.-]*:\/\//i.test(value);
 }
@@ -131,7 +134,10 @@ export function detectIndicator(input: string, force: ForceType = 'auto'): Indic
 			: fail('Not a valid IP address');
 	}
 	if (force === 'domain') {
-		const host = hasScheme(value) ? hostnameFromUrl(value) : value;
+		const host =
+			HOST_WITH_SUFFIX.test(value) || hasScheme(value)
+				? hostnameFromUrl(hasScheme(value) ? value : `http://${value}`)
+				: value;
 		const normalized = host ? normalizeHostname(host) : null;
 		return normalized ? done('domain', normalized, refanged) : fail('Not a valid domain name');
 	}
@@ -150,8 +156,8 @@ export function detectIndicator(input: string, force: ForceType = 'auto'): Indic
 	const domain = normalizeHostname(value);
 	if (domain) return done('domain', domain, refanged);
 
-	// A host with a path or query but no scheme, such as `example.com/login`.
-	if (/^[^/?#\s]+[/?#]/.test(value)) {
+	// A host with a path, query or port but no scheme, such as `example.com/login` or `example.com:8080`.
+	if (HOST_WITH_SUFFIX.test(value)) {
 		const url = `http://${value}`;
 		const host = hostnameFromUrl(url);
 		if (host && (isIp(host.replace(/^\[|\]$/g, '')) || normalizeHostname(host))) {
