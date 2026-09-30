@@ -9,11 +9,19 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { createThrottle } from '../../shared/throttle';
 import { CREDENTIAL_NAME } from '../../shared/transport';
+import { domainResource } from './resources/domain';
+import { fileResource } from './resources/file';
 import { indicatorResource } from './resources/indicator';
+import { ipResource } from './resources/ip';
+import { urlResource } from './resources/url';
 import type { ResourceModule, Tier } from './types';
 
 const RESOURCES: Record<string, ResourceModule> = {
+	domain: domainResource,
+	file: fileResource,
 	indicator: indicatorResource,
+	ip: ipResource,
+	url: urlResource,
 };
 
 const resourceProperty: INodeProperties = {
@@ -21,7 +29,13 @@ const resourceProperty: INodeProperties = {
 	name: 'resource',
 	type: 'options',
 	noDataExpression: true,
-	options: [{ name: 'Indicator', value: 'indicator' }],
+	options: [
+		{ name: 'Domain', value: 'domain' },
+		{ name: 'File', value: 'file' },
+		{ name: 'Indicator', value: 'indicator' },
+		{ name: 'IP Address', value: 'ip' },
+		{ name: 'URL', value: 'url' },
+	],
 	default: 'indicator',
 };
 

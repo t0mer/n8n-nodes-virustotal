@@ -1,10 +1,11 @@
 import type { IDataObject, INodeProperties } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import type { IndicatorType } from '../../shared/indicator';
+import { detectIndicator } from '../../shared/indicator';
 import { objectPath } from '../../shared/objects';
 import { summarize } from '../../shared/summary';
 import { vtLookup } from '../../shared/transport';
-import type { OperationContext } from './types';
+import type { OperationContext, OperationHandler } from './types';
 
 export interface LookupOptions {
 	includeEngines: boolean;
@@ -110,4 +111,26 @@ export async function lookupObject(
 		includeEngines: options.includeEngines,
 		thresholds: { malicious: options.maliciousThreshold, suspicious: options.suspiciousThreshold },
 	});
+}
+
+/** Shorthand for a parameter's displayOptions. */
+export function show(resource: string, ...operations: string[]) {
+	return { show: { resource: [resource], operation: operations } };
+}
+
+/** Reads a string parameter and checks that it is an indicator of the expected type. */
+export function readTyped(ctx: OperationContext, param: string, type: IndicatorType): string {
+	const input = ctx.fn.getNodeParameter(param, ctx.index) as string;
+	ctx.setIndicator(input);
+	const detected = detectIndicator(input, type);
+	if (!detected.ok) {
+		throw new NodeOperationError(ctx.fn.getNode(), detected.reason, { itemIndex: ctx.index });
+	}
+	return detected.indicator;
+}
+
+/** Handler for a "Get Report" operation of one object type. */
+export function reportHandler(type: IndicatorType, param: string): OperationHandler {
+	return async (ctx) =>
+		lookupObject(ctx, type, readTyped(ctx, param, type), readLookupOptions(ctx));
 }
