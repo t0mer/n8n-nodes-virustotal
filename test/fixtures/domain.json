@@ -1,0 +1,40 @@
+{
+	"data": {
+		"id": "example.com",
+		"type": "domain",
+		"attributes": {
+			"categories": {
+				"Sophos": "information technology",
+				"Forcepoint ThreatSeeker": "information technology",
+				"alphaMountain.ai": "Business/Economy"
+			},
+			"registrar": "RESERVED-Internet Assigned Numbers Authority",
+			"creation_date": 694224000,
+			"whois_date": 1789000000,
+			"last_analysis_date": 1790000200,
+			"reputation": 10,
+			"total_votes": { "harmless": 40, "malicious": 2 },
+			"tags": [],
+			"last_analysis_stats": {
+				"malicious": 0,
+				"suspicious": 0,
+				"harmless": 66,
+				"undetected": 25,
+				"timeout": 0
+			},
+			"last_dns_records": [
+				{ "type": "A", "value": "93.184.216.34", "ttl": 3600 },
+				{ "type": "MX", "value": "mail.example.com", "ttl": 300, "priority": 10 }
+			],
+			"last_https_certificate": {
+				"issuer": {
+					"C": "US",
+					"O": "DigiCert Inc",
+					"CN": "DigiCert Global G2 TLS RSA SHA256 2020 CA1"
+				},
+				"subject": { "CN": "www.example.org" },
+				"validity": { "not_before": "2025-01-30 00:00:00", "not_after": "2026-03-01 23:59:59" }
+			}
+		}
+	}
+}

@@ -1,0 +1,6 @@
+{
+	"error": {
+		"code": "NotFoundError",
+		"message": "File \"0123456789abcdef0123456789abcdef\" not found"
+	}
+}

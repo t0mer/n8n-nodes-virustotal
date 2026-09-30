@@ -1,0 +1,28 @@
+{
+	"data": {
+		"id": "f5e8b8c3d0a7c2e6a1b2c3d4e5f60718293a4b5c6d7e8f9012345678901234ab",
+		"type": "url",
+		"attributes": {
+			"url": "https://example.com/",
+			"last_final_url": "https://www.example.com/",
+			"title": "Example Domain",
+			"categories": {
+				"Forcepoint ThreatSeeker": "information technology",
+				"Sophos": "information technology"
+			},
+			"last_http_response_code": 200,
+			"last_analysis_date": 1790000100,
+			"reputation": 0,
+			"total_votes": { "harmless": 1, "malicious": 0 },
+			"tags": [],
+			"last_analysis_stats": {
+				"malicious": 0,
+				"suspicious": 0,
+				"harmless": 70,
+				"undetected": 20,
+				"timeout": 0
+			},
+			"last_analysis_results": {}
+		}
+	}
+}

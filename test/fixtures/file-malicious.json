@@ -1,0 +1,66 @@
+{
+	"data": {
+		"id": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+		"type": "file",
+		"links": {
+			"self": "https://www.virustotal.com/api/v3/files/275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
+		},
+		"attributes": {
+			"sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+			"sha1": "cf8bd9dfddff007f75adf4c2be48005cea317c62",
+			"md5": "69630e4574ec6798239b091cda43dca0",
+			"meaningful_name": "eicar.com",
+			"names": [
+				"eicar.com",
+				"eicar.txt",
+				"a.exe",
+				"b.exe",
+				"c.exe",
+				"d.exe",
+				"e.exe",
+				"f.exe",
+				"g.exe",
+				"h.exe",
+				"i.exe",
+				"j.exe"
+			],
+			"size": 68,
+			"type_description": "Text",
+			"type_tag": "text",
+			"first_submission_date": 1200000000,
+			"last_analysis_date": 1790000000,
+			"times_submitted": 123456,
+			"reputation": -42,
+			"total_votes": { "harmless": 3, "malicious": 210 },
+			"tags": ["eicar", "text"],
+			"last_analysis_stats": {
+				"malicious": 62,
+				"suspicious": 1,
+				"harmless": 0,
+				"undetected": 8,
+				"timeout": 0,
+				"type-unsupported": 5,
+				"failure": 1
+			},
+			"last_analysis_results": {
+				"Kaspersky": {
+					"category": "malicious",
+					"engine_name": "Kaspersky",
+					"result": "EICAR-Test-File"
+				},
+				"Sophos": { "category": "suspicious", "engine_name": "Sophos", "result": "Generic PUA" },
+				"Acme": { "category": "undetected", "engine_name": "Acme", "result": null },
+				"Other": { "category": "harmless", "engine_name": "Other", "result": null }
+			},
+			"popular_threat_classification": { "suggested_threat_label": "virus.eicar/test" },
+			"sandbox_verdicts": {
+				"Zenbox": {
+					"category": "malicious",
+					"sandbox_name": "Zenbox",
+					"malware_classification": ["MALWARE"],
+					"malware_names": ["EICAR"]
+				}
+			}
+		}
+	}
+}

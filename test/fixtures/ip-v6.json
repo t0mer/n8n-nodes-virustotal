@@ -1,0 +1,24 @@
+{
+	"data": {
+		"id": "2606:4700:4700::1111",
+		"type": "ip_address",
+		"attributes": {
+			"asn": 13335,
+			"as_owner": "CLOUDFLARENET",
+			"country": "US",
+			"network": "2606:4700:4700::/48",
+			"regional_internet_registry": "ARIN",
+			"last_analysis_date": 1790000300,
+			"reputation": 150,
+			"total_votes": { "harmless": 200, "malicious": 5 },
+			"tags": [],
+			"last_analysis_stats": {
+				"malicious": 1,
+				"suspicious": 1,
+				"harmless": 60,
+				"undetected": 25,
+				"timeout": 0
+			}
+		}
+	}
+}
