@@ -96,6 +96,18 @@ describe('vtRequest', () => {
 		expect(sleepMock.mock.calls.map((c) => c[0])).toEqual([60000, 60000]);
 	});
 
+	it('passes the execution cancel signal to retry waits so they can be cancelled', async () => {
+		const { ctx } = fakeContext([
+			{ statusCode: 429, body: err('QuotaExceededError') },
+			{ statusCode: 503, body: err('TransientError') },
+			{ statusCode: 200, body: {} },
+		]);
+		const controller = new AbortController();
+		(ctx as unknown as Record<string, unknown>).getExecutionCancelSignal = () => controller.signal;
+		await vtRequest(ctx, { path: '/x' });
+		expect(sleepMock.mock.calls.map((c) => c[1])).toEqual([controller.signal, controller.signal]);
+	});
+
 	it('recovers when the retry after 429 succeeds', async () => {
 		const { ctx } = fakeContext([
 			{ statusCode: 429, body: err('TooManyRequestsError') },

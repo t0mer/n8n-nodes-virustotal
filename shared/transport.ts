@@ -149,6 +149,8 @@ export async function vtRequestRaw<T = IDataObject>(
 ): Promise<VtResponse<T>> {
 	let backoffAttempt = 0;
 	let quotaAttempt = 0;
+	// Retry waits must not outlive a cancelled execution.
+	const signal = 'getExecutionCancelSignal' in ctx ? ctx.getExecutionCancelSignal() : undefined;
 
 	for (;;) {
 		if (opts.throttle) await opts.throttle.wait();
@@ -169,12 +171,12 @@ export async function vtRequestRaw<T = IDataObject>(
 
 		const mapped = mapError(statusCode, body);
 		if (mapped.retry === 'backoff' && backoffAttempt < BACKOFF_MS.length) {
-			await sleep(BACKOFF_MS[backoffAttempt++]);
+			await sleep(BACKOFF_MS[backoffAttempt++], signal);
 			continue;
 		}
 		if (mapped.retry === 'quota' && quotaAttempt < QUOTA_RETRIES) {
 			quotaAttempt++;
-			await sleep(QUOTA_WAIT_MS);
+			await sleep(QUOTA_WAIT_MS, signal);
 			continue;
 		}
 
