@@ -12,6 +12,7 @@ import behaviourSummary from './fixtures/behaviour-summary.json';
 import behaviourMitre from './fixtures/behaviour-mitre.json';
 import livehuntPage1 from './fixtures/livehunt-page1.json';
 import livehuntPage2 from './fixtures/livehunt-page2.json';
+import analysisCompletedUrlBoth from './fixtures/analysis-completed-url-both.json';
 import analysisQueued from './fixtures/analysis-queued.json';
 import analysisInProgress from './fixtures/analysis-in-progress.json';
 import analysisCompleted from './fixtures/analysis-completed.json';
@@ -32,6 +33,7 @@ export const fixtures = {
 	behaviourMitre,
 	livehuntPage1,
 	livehuntPage2,
+	analysisCompletedUrlBoth,
 	analysisQueued,
 	analysisInProgress,
 	analysisCompleted,

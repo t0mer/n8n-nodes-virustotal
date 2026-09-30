@@ -115,7 +115,7 @@ export async function finishScan(
 		itemIndex: ctx.index,
 	});
 
-	const finalId = analysedObjectId(analysis) ?? objectId;
+	const finalId = analysedObjectId(analysis, type) ?? objectId;
 	const report = await vtLookup<IDataObject>(ctx.fn, {
 		// finalId is already a VirusTotal object id (file hash or URL SHA-256), so it is not re-encoded.
 		path: `/${COLLECTION[type]}/${finalId}`,

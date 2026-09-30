@@ -50,6 +50,18 @@ describe('URL > Scan', () => {
 		});
 	});
 
+	it('looks up the URL id, not the fetched content hash, when meta has both', async () => {
+		const { json, calls } = await run({ ...params, mode: 'wait', scanOptions: fast }, [
+			submitted,
+			ok(fixtures.analysisCompletedUrlBoth),
+			ok(fixtures.urlClean),
+		]);
+		expect(calls[2].url).toBe(
+			'https://www.virustotal.com/api/v3/urls/f5e8b8c3d0a7c2e6a1b2c3d4e5f60718293a4b5c6d7e8f9012345678901234ab',
+		);
+		expect(json).toMatchObject({ found: true, type: 'url', verdict: 'clean' });
+	});
+
 	it('Submit Only returns the analysis id at once', async () => {
 		const { json, calls } = await run({ ...params, mode: 'submit' }, [submitted]);
 		expect(calls).toHaveLength(1);

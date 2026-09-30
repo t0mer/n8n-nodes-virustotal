@@ -38,6 +38,17 @@ describe('Analysis > Get', () => {
 		});
 	});
 
+	it('reports a URL analysis as a URL even when meta also has file_info', async () => {
+		const { items } = await run(
+			{ resource: 'analysis', operation: 'get', analysisId: 'u-f5e8b8c3-1790000100' },
+			[ok(fixtures.analysisCompletedUrlBoth)],
+		);
+		expect(items[0].json).toMatchObject({
+			itemType: 'url',
+			itemId: expect.stringMatching(/^f5e8b8c3/),
+		});
+	});
+
 	it('adds the analysed URL id for URL analyses', async () => {
 		const { items } = await run({ resource: 'analysis', operation: 'get', analysisId: 'A' }, [
 			ok(fixtures.analysisCompletedUrl),

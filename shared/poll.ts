@@ -31,9 +31,27 @@ export interface WaitOptions {
 	sleepFn?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
 
+/**
+ * Which kind of object an analysis belongs to. For URL analyses `meta` holds both `url_info` and
+ * `file_info` (the fetched content), so the analysis id prefix (`u-`) decides when both are present.
+ */
+export function analysisObjectType(
+	analysisId: string,
+	analysis: AnalysisBody,
+): 'file' | 'url' | undefined {
+	const { file_info: file, url_info: url } = analysis.meta ?? {};
+	if (url && (!file || analysisId.startsWith('u-'))) return 'url';
+	return file ? 'file' : undefined;
+}
+
 /** The id of the analysed object (file SHA-256 or URL id), available once the analysis has data. */
-export function analysedObjectId(analysis: AnalysisBody): string | undefined {
-	return analysis.meta?.file_info?.sha256 ?? analysis.meta?.url_info?.id;
+export function analysedObjectId(
+	analysis: AnalysisBody,
+	type?: 'file' | 'url',
+): string | undefined {
+	const file = analysis.meta?.file_info?.sha256;
+	const url = analysis.meta?.url_info?.id;
+	return type === 'url' ? (url ?? file) : (file ?? url);
 }
 
 /**

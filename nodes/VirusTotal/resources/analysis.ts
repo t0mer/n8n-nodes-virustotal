@@ -1,7 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { isoFromEpoch } from '../../../shared/summary';
 import type { AnalysisBody } from '../../../shared/poll';
-import { analysedObjectId } from '../../../shared/poll';
+import { analysedObjectId, analysisObjectType } from '../../../shared/poll';
 import { vtRequest } from '../../../shared/transport';
 import { show } from '../lookup';
 import type { ResourceModule } from '../types';
@@ -45,8 +45,8 @@ export const analysisResource: ResourceModule = {
 				throttle: ctx.throttle,
 			});
 			const attributes = body.data?.attributes ?? {};
-			const itemId = analysedObjectId(body);
-			const itemType = body.meta?.file_info ? 'file' : body.meta?.url_info ? 'url' : undefined;
+			const itemType = analysisObjectType(analysisId, body);
+			const itemId = analysedObjectId(body, itemType);
 			return {
 				analysisId,
 				status: attributes.status ?? 'unknown',
