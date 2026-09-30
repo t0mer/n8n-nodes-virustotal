@@ -1,0 +1,18 @@
+{
+	"data": {
+		"api_requests_hourly": {
+			"group": { "allowed": 240, "used": 3 },
+			"user": { "allowed": 240, "used": 3, "inherited_from": "group" }
+		},
+		"api_requests_daily": {
+			"group": { "allowed": 500, "used": 120 },
+			"user": { "allowed": 500, "used": 120 }
+		},
+		"api_requests_monthly": {
+			"group": { "allowed": 15500, "used": 2100 },
+			"user": { "allowed": 15500, "used": 2100 }
+		},
+		"intelligence_downloads_monthly": { "group": { "allowed": 0, "used": 0 } },
+		"odd_entry": { "note": "no counters" }
+	}
+}

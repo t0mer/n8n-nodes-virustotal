@@ -9,23 +9,27 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { createThrottle } from '../../shared/throttle';
 import { CREDENTIAL_NAME } from '../../shared/transport';
+import { accountResource } from './resources/account';
 import { analysisResource } from './resources/analysis';
 import { commentResource } from './resources/comment';
 import { domainResource } from './resources/domain';
 import { fileResource } from './resources/file';
 import { indicatorResource } from './resources/indicator';
 import { ipResource } from './resources/ip';
+import { searchResource } from './resources/search';
 import { urlResource } from './resources/url';
 import { voteResource } from './resources/vote';
 import type { ResourceModule, Tier } from './types';
 
 const RESOURCES: Record<string, ResourceModule> = {
+	account: accountResource,
 	analysis: analysisResource,
 	comment: commentResource,
 	domain: domainResource,
 	file: fileResource,
 	indicator: indicatorResource,
 	ip: ipResource,
+	search: searchResource,
 	url: urlResource,
 	vote: voteResource,
 };
@@ -36,12 +40,14 @@ const resourceProperty: INodeProperties = {
 	type: 'options',
 	noDataExpression: true,
 	options: [
+		{ name: 'Account', value: 'account' },
 		{ name: 'Analysis', value: 'analysis' },
 		{ name: 'Comment', value: 'comment' },
 		{ name: 'Domain', value: 'domain' },
 		{ name: 'File', value: 'file' },
 		{ name: 'Indicator', value: 'indicator' },
 		{ name: 'IP Address', value: 'ip' },
+		{ name: 'Search', value: 'search' },
 		{ name: 'URL', value: 'url' },
 		{ name: 'Vote', value: 'vote' },
 	],
