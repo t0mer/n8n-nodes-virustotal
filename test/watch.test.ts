@@ -254,3 +254,26 @@ describe('fixtures sanity', () => {
 		expect(fixtures.domain.data.attributes.last_analysis_stats.malicious).toBe(0);
 	});
 });
+
+describe('watchIndicators: a rejected indicator', () => {
+	it('is skipped without blocking the ones after it, and the cursor moves on', async () => {
+		const state = freshState();
+		const list = ['a', 'b', 'c'].map((n) => dom(`${n}.com`));
+		const { lookup, order } = scripted({
+			'a.com': [body(report(0))],
+			'b.com': [{ skipped: true }],
+			'c.com': [body(report(0))],
+		});
+		await watchIndicators({
+			state,
+			indicators: list,
+			fireWhen: 'verdictChanges',
+			maxLookups: 3,
+			thresholds: T,
+			lookup,
+		});
+		expect(order).toEqual(['a.com', 'b.com', 'c.com']);
+		expect(Object.keys(state.entries)).toEqual(['a.com', 'c.com']);
+		expect(state.cursor).toBe(0);
+	});
+});

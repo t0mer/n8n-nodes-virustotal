@@ -21,9 +21,14 @@ export interface WatchState {
 	entries: Record<string, WatchEntry>;
 }
 
+/**
+ * - `rateLimited`: stop this poll and keep the position.
+ * - `skipped`: VirusTotal rejected this one indicator (for example 400 InvalidArgument); move on without touching its state.
+ */
 export type LookupResult =
 	| { rateLimited: true }
-	| { rateLimited?: false; body: IDataObject | null };
+	| { skipped: true; rateLimited?: false }
+	| { rateLimited?: false; skipped?: false; body: IDataObject | null };
 
 export interface WatchOptions {
 	state: WatchState;
@@ -98,6 +103,7 @@ export async function watchIndicators(options: WatchOptions): Promise<IDataObjec
 		const result = await options.lookup(target);
 		if (result.rateLimited) break;
 		done++;
+		if (result.skipped) continue;
 
 		const summary = summarize(target.type, result.body, {
 			indicator: target.indicator,

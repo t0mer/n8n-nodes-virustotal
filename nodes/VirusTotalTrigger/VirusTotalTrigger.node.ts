@@ -188,9 +188,10 @@ async function pollWatched(ctx: IPollFunctions): Promise<INodeExecutionData[][] 
 	const lookup = async (target: Indicator): Promise<LookupResult> => {
 		const res = await vtRequestRaw<IDataObject>(ctx, {
 			path: objectPath(target.type, target.indicator),
-			acceptStatus: [404, 429],
+			acceptStatus: [400, 404, 429],
 		});
 		if (res.statusCode === 429) return { rateLimited: true };
+		if (res.statusCode === 400) return { skipped: true };
 		return { body: res.statusCode === 404 ? null : res.body };
 	};
 
@@ -199,6 +200,7 @@ async function pollWatched(ctx: IPollFunctions): Promise<INodeExecutionData[][] 
 		for (const target of indicators.slice(0, Math.min(TEST_EVENT_LOOKUPS, maxLookups))) {
 			const result = await lookup(target);
 			if (result.rateLimited) break;
+			if (result.skipped) continue;
 			items.push({
 				...summarize(target.type, result.body, { indicator: target.indicator, thresholds }),
 				event: 'test',

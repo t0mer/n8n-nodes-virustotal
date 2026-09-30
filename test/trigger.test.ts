@@ -92,6 +92,19 @@ describe('VirusTotal Trigger', () => {
 		expect(p.staticData.cursor).toBe(1);
 	});
 
+	it('skips an indicator VirusTotal rejects with 400 and still checks the next one', async () => {
+		const p = poll({
+			params: { indicators: list('a.com', 'b.com'), fireWhen: 'verdictChanges', maxLookups: 2 },
+			responses: [
+				{ statusCode: 400, body: { error: { code: 'InvalidArgumentError', message: 'bad' } } },
+				report(0),
+			],
+		});
+		expect(await p.result()).toBeNull();
+		expect(p.calls).toHaveLength(2);
+		expect(Object.keys(p.staticData.entries as object)).toEqual(['b.com']);
+	});
+
 	it('throws on a 401', async () => {
 		const p = poll({
 			params: { indicators: list('a.com'), fireWhen: 'verdictChanges', maxLookups: 1 },
