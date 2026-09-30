@@ -8,6 +8,8 @@ import relationshipPage2 from './fixtures/relationship-page2.json';
 import overallQuotas from './fixtures/overall-quotas.json';
 import popularThreatCategories from './fixtures/popular-threat-categories.json';
 import searchResults from './fixtures/search-results.json';
+import behaviourSummary from './fixtures/behaviour-summary.json';
+import behaviourMitre from './fixtures/behaviour-mitre.json';
 import analysisQueued from './fixtures/analysis-queued.json';
 import analysisInProgress from './fixtures/analysis-in-progress.json';
 import analysisCompleted from './fixtures/analysis-completed.json';
@@ -24,6 +26,8 @@ export const fixtures = {
 	overallQuotas,
 	popularThreatCategories,
 	searchResults,
+	behaviourSummary,
+	behaviourMitre,
 	analysisQueued,
 	analysisInProgress,
 	analysisCompleted,

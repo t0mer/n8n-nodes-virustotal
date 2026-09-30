@@ -1,0 +1,10 @@
+{
+	"data": {
+		"files_written": ["C:\\Users\\a\\x.exe"],
+		"processes_created": ["x.exe"],
+		"mutexes_created": ["Global\\abc"],
+		"tags": ["PERSISTENCE"],
+		"verdicts": ["MALWARE"],
+		"verdict_labels": ["trojan"]
+	}
+}

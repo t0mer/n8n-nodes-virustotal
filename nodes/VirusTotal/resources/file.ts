@@ -1,10 +1,10 @@
-import type { INodeProperties } from 'n8n-workflow';
+import type { IDataObject, INodeProperties } from 'n8n-workflow';
 import { lookupOptionsProperty, readTyped, reportHandler, show } from '../lookup';
 import type { Relationship } from '../related';
 import { relatedHandler, relatedProperties } from '../related';
 import { analysisIdOf, finishScan, renderReport, scanProperties } from '../scan';
 import { uploadFile } from '../../../shared/upload';
-import { vtRequest } from '../../../shared/transport';
+import { vtLookup, vtRequest } from '../../../shared/transport';
 import { objectPath } from '../../../shared/objects';
 import type { ResourceModule } from '../types';
 
@@ -33,6 +33,19 @@ const properties: INodeProperties[] = [
 		noDataExpression: true,
 		displayOptions: { show: { resource: ['file'] } },
 		options: [
+			{
+				name: 'Get Behaviour Summary',
+				value: 'getBehaviourSummary',
+				action: 'Get the behaviour summary of a file',
+				description:
+					'Get the merged sandbox behaviour (files, registry, network, processes) of a file',
+			},
+			{
+				name: 'Get MITRE ATT&CK',
+				value: 'getMitre',
+				action: 'Get the MITRE ATT&CK tree of a file',
+				description: 'Get the MITRE ATT&CK tactics and techniques observed in sandbox runs',
+			},
 			{
 				name: 'Get Related',
 				value: 'getRelated',
@@ -68,7 +81,14 @@ const properties: INodeProperties[] = [
 		required: true,
 		default: '',
 		placeholder: 'e.g. 275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f',
-		displayOptions: show('file', 'getReport', 'getRelated', 'rescan'),
+		displayOptions: show(
+			'file',
+			'getBehaviourSummary',
+			'getMitre',
+			'getReport',
+			'getRelated',
+			'rescan',
+		),
 		description: 'An MD5, SHA-1 or SHA-256 hash',
 	},
 	{
@@ -110,6 +130,22 @@ const properties: INodeProperties[] = [
 export const fileResource: ResourceModule = {
 	properties,
 	handlers: {
+		async getBehaviourSummary(ctx) {
+			const hash = readTyped(ctx, 'hash', 'file');
+			const body = await vtLookup<{ data?: IDataObject }>(ctx.fn, {
+				path: `${objectPath('file', hash)}/behaviour_summary`,
+				throttle: ctx.throttle,
+			});
+			return body ? { found: true, hash, ...body.data } : { found: false, hash };
+		},
+		async getMitre(ctx) {
+			const hash = readTyped(ctx, 'hash', 'file');
+			const body = await vtLookup<{ data?: IDataObject }>(ctx.fn, {
+				path: `${objectPath('file', hash)}/behaviour_mitre_trees`,
+				throttle: ctx.throttle,
+			});
+			return body ? { found: true, hash, sandboxes: body.data ?? {} } : { found: false, hash };
+		},
 		getRelated: relatedHandler('file', 'hash'),
 		getReport: reportHandler('file', 'hash'),
 		async rescan(ctx) {

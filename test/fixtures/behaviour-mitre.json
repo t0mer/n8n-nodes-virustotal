@@ -1,0 +1,19 @@
+{
+	"data": {
+		"Zenbox": {
+			"tactics": [
+				{
+					"id": "TA0002",
+					"name": "Execution",
+					"techniques": [
+						{
+							"id": "T1059",
+							"name": "Command and Scripting Interpreter",
+							"severity": "IMPACT_SEVERITY_INFO"
+						}
+					]
+				}
+			]
+		}
+	}
+}
