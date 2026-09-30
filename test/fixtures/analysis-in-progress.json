@@ -1,0 +1,20 @@
+{
+	"data": {
+		"id": "MjAx-1790000000",
+		"type": "analysis",
+		"attributes": {
+			"status": "in-progress",
+			"date": 1790000000,
+			"stats": {
+				"malicious": 0,
+				"suspicious": 0,
+				"harmless": 0,
+				"undetected": 0,
+				"timeout": 0,
+				"failure": 0,
+				"type-unsupported": 0
+			},
+			"results": {}
+		}
+	}
+}

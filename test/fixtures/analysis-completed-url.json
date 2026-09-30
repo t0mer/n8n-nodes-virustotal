@@ -1,0 +1,18 @@
+{
+	"data": {
+		"id": "u-f5e8-1790000100",
+		"type": "analysis",
+		"attributes": {
+			"status": "completed",
+			"date": 1790000100,
+			"stats": { "malicious": 0, "suspicious": 0, "harmless": 70, "undetected": 20, "timeout": 0 },
+			"results": {}
+		}
+	},
+	"meta": {
+		"url_info": {
+			"id": "f5e8b8c3d0a7c2e6a1b2c3d4e5f60718293a4b5c6d7e8f9012345678901234ab",
+			"url": "https://example.com/"
+		}
+	}
+}

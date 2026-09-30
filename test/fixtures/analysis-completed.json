@@ -1,0 +1,28 @@
+{
+	"data": {
+		"id": "MjAx-1790000000",
+		"type": "analysis",
+		"attributes": {
+			"status": "completed",
+			"date": 1790000000,
+			"stats": {
+				"malicious": 62,
+				"suspicious": 1,
+				"harmless": 0,
+				"undetected": 8,
+				"timeout": 0,
+				"failure": 1,
+				"type-unsupported": 5
+			},
+			"results": {}
+		}
+	},
+	"meta": {
+		"file_info": {
+			"sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+			"sha1": "cf8bd9dfddff007f75adf4c2be48005cea317c62",
+			"md5": "69630e4574ec6798239b091cda43dca0",
+			"size": 68
+		}
+	}
+}
