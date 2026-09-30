@@ -33,3 +33,45 @@ export function fakeContext(responses: FakeResponse[]) {
 	} as unknown as VtContext;
 	return { ctx, calls };
 }
+
+export interface FakeExecuteOptions {
+	/** One parameter map per input item. */
+	params: Array<Record<string, unknown>>;
+	responses: FakeResponse[];
+	credentials?: Record<string, unknown>;
+	continueOnFail?: boolean;
+	binary?: Record<string, Buffer>;
+}
+
+/**
+ * A minimal IExecuteFunctions. Like n8n, getNodeParameter throws when a parameter
+ * has no value and no fallback was given, which mimics a parameter hidden by displayOptions.
+ */
+export function fakeExecute(options: FakeExecuteOptions) {
+	const { ctx, calls } = fakeContext(options.responses);
+	const fn = ctx as unknown as Record<string, unknown>;
+	fn.getInputData = () => options.params.map(() => ({ json: {} }));
+	fn.getNodeParameter = (name: string, index: number, fallback?: unknown) => {
+		const value = options.params[index]?.[name];
+		if (value !== undefined) return value;
+		if (fallback !== undefined) return fallback;
+		throw new Error(`Could not get parameter "${name}"`);
+	};
+	fn.getCredentials = async () => ({
+		apiKey: 'test-key',
+		tier: 'public',
+		requestsPerMinute: 100000,
+		...options.credentials,
+	});
+	fn.continueOnFail = () => options.continueOnFail ?? false;
+	fn.getExecutionCancelSignal = () => undefined;
+	(fn.helpers as Record<string, unknown>).getBinaryDataBuffer = async (
+		_i: number,
+		property: string,
+	) => {
+		const buffer = options.binary?.[property];
+		if (!buffer) throw new Error(`no binary data "${property}"`);
+		return buffer;
+	};
+	return { fn: fn as unknown as import('n8n-workflow').IExecuteFunctions, calls };
+}

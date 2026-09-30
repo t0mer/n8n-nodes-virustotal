@@ -46,7 +46,7 @@
     "strict": true,
     "credentials": ["dist/credentials/VirusTotalApi.credentials.js"],
     "nodes": [
-      "dist/nodes/Example/Example.node.js"
+      "dist/nodes/VirusTotal/VirusTotal.node.js"
     ]
   },
   "devDependencies": {
