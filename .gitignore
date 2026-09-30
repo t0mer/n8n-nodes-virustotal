@@ -1,0 +1,31 @@
+dist
+node_modules
+
+# Claude / AI assistant context - local only
+CLAUDE.md
+AGENTS.md
+.agents/
+.claude/
+.cursor/
+.aider*
+
+# Design / implementation / planning docs - local only
+/docs/
+docs/*
+*.design.md
+*.implementation.md
+
+# Local security scan output
+scans/
+
+# Local config / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+*.log
