@@ -1,0 +1,17 @@
+{
+	"data": [
+		{
+			"id": "d41d8cd98f00b204e9800998ecf8427e",
+			"type": "file",
+			"attributes": {},
+			"context_attributes": {
+				"notification_id": "n-1",
+				"notification_date": 1790000100,
+				"rule_name": "old_rule",
+				"ruleset_name": "my_ruleset",
+				"notification_tags": []
+			}
+		}
+	],
+	"meta": {}
+}
