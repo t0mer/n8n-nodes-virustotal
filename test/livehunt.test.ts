@@ -61,11 +61,11 @@ describe('pollLivehunt', () => {
 		const state = normalizeHuntState(undefined);
 		const { fetchPage } = pages({ items: p1 });
 		expect(await pollLivehunt({ state, thresholds: T, maxPages: 3, fetchPage })).toEqual([]);
-		expect(state).toEqual({ seen: ['n-2', 'n-3'], baselined: true });
+		expect(state).toEqual({ seen: ['n-2', 'n-3'], baselined: true, pending: [] });
 	});
 
 	it('emits only unseen notifications, oldest first, and never twice', async () => {
-		const state = { seen: ['n-1'], baselined: true };
+		const state = { seen: ['n-1'], baselined: true, pending: [] as string[] };
 		const a = pages({ items: [note('n-3'), note('n-2'), note('n-1')] });
 		const out = await pollLivehunt({ state, thresholds: T, maxPages: 3, fetchPage: a.fetchPage });
 		expect(out.map((i) => i.notificationId)).toEqual(['n-2', 'n-3']);
@@ -77,7 +77,7 @@ describe('pollLivehunt', () => {
 	});
 
 	it('follows the cursor while a whole page is new, and stops at the first seen notification', async () => {
-		const state = { seen: ['n-0'], baselined: true };
+		const state = { seen: ['n-0'], baselined: true, pending: [] };
 		const { fetchPage, cursors } = pages(
 			{ items: [note('n-4'), note('n-3')], next: 'C2' },
 			{ items: [note('n-2'), note('n-0')], next: 'C3' },
@@ -88,7 +88,7 @@ describe('pollLivehunt', () => {
 	});
 
 	it('reads at most maxPages pages', async () => {
-		const state = { seen: [], baselined: true };
+		const state = { seen: [], baselined: true, pending: [] };
 		const { fetchPage, cursors } = pages(
 			{ items: [note('a')], next: 'C2' },
 			{ items: [note('b')], next: 'C3' },
@@ -115,8 +115,100 @@ describe('pollLivehunt', () => {
 		expect(state.baselined).toBe(true);
 	});
 
+	it('resumes unread pages after a rate limit on a later page, so nothing is lost', async () => {
+		const state = { seen: ['n-0'], baselined: true, pending: [] as string[] };
+		// Poll 1: page 1 is new, page 2 is rate limited.
+		const first = pages({ items: [note('n-4'), note('n-3')], next: 'C2' }, { rateLimited: true });
+		const out1 = await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 3,
+			fetchPage: first.fetchPage,
+		});
+		expect(out1.map((i) => i.notificationId)).toEqual(['n-3', 'n-4']);
+		expect(state.pending).toEqual(['C2']);
+
+		// Poll 2: the head is already seen, so the stored cursor is read and the backlog is emitted.
+		const second = pages(
+			{ items: [note('n-4'), note('n-3')], next: 'C2' },
+			{ items: [note('n-2'), note('n-1'), note('n-0')] },
+		);
+		const out2 = await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 3,
+			fetchPage: second.fetchPage,
+		});
+		expect(second.cursors).toEqual([undefined, 'C2']);
+		expect(out2.map((i) => i.notificationId)).toEqual(['n-1', 'n-2']);
+		expect(state.pending).toEqual([]);
+	});
+
+	it('resumes a backlog larger than the page budget over several polls', async () => {
+		const state = { seen: ['old'], baselined: true, pending: [] as string[] };
+		const first = pages({ items: [note('e')], next: 'C2' });
+		const out1 = await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 1,
+			fetchPage: first.fetchPage,
+		});
+		expect(out1.map((i) => i.notificationId)).toEqual(['e']);
+		expect(state.pending).toEqual(['C2']);
+
+		const second = pages(
+			{ items: [note('e')], next: 'C2' },
+			{ items: [note('d')], next: 'C3' },
+			{ items: [note('c'), note('old')] },
+		);
+		const out2 = await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 2,
+			fetchPage: second.fetchPage,
+		});
+		expect(out2.map((i) => i.notificationId)).toEqual(['d']);
+		expect(state.pending).toEqual(['C3']);
+
+		const third = pages({ items: [note('e')], next: 'C2' }, { items: [note('c'), note('old')] });
+		const out3 = await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 2,
+			fetchPage: third.fetchPage,
+		});
+		expect(out3.map((i) => i.notificationId)).toEqual(['c']);
+		expect(state.pending).toEqual([]);
+	});
+
+	it('keeps the pending cursors when the head poll is rate limited', async () => {
+		const state = { seen: ['a'], baselined: true, pending: ['C9'] };
+		await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 3,
+			fetchPage: pages({ rateLimited: true }).fetchPage,
+		});
+		expect(state.pending).toEqual(['C9']);
+	});
+
+	it('does not keep a backlog while still establishing the baseline', async () => {
+		const state = normalizeHuntState(undefined);
+		await pollLivehunt({
+			state,
+			thresholds: T,
+			maxPages: 1,
+			fetchPage: pages({ items: [note('a')], next: 'C2' }).fetchPage,
+		});
+		expect(state).toMatchObject({ baselined: true, pending: [] });
+	});
+
 	it('keeps at most the last 1000 ids', async () => {
-		const state = { seen: Array.from({ length: MAX_SEEN }, (_, i) => `old-${i}`), baselined: true };
+		const state = {
+			seen: Array.from({ length: MAX_SEEN }, (_, i) => `old-${i}`),
+			baselined: true,
+			pending: [] as string[],
+		};
 		await pollLivehunt({
 			state,
 			thresholds: T,

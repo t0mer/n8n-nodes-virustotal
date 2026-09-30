@@ -5,9 +5,14 @@ import type { Thresholds } from './verdict';
 /** Notification ids remembered for deduplication. */
 export const MAX_SEEN = 1000;
 
+/** Unread regions of the feed that still need reading, newest first. */
+export const MAX_PENDING = 20;
+
 export interface HuntState {
 	seen: string[];
 	baselined: boolean;
+	/** Cursors to resume from: pages a poll could not read because of its page budget or a rate limit. */
+	pending: string[];
 }
 
 export function normalizeHuntState(raw: Partial<HuntState> | undefined): HuntState {
@@ -16,6 +21,9 @@ export function normalizeHuntState(raw: Partial<HuntState> | undefined): HuntSta
 			? raw.seen.filter((id): id is string => typeof id === 'string')
 			: [],
 		baselined: raw?.baselined === true,
+		pending: Array.isArray(raw?.pending)
+			? raw.pending.filter((c): c is string => typeof c === 'string')
+			: [],
 	};
 }
 
@@ -74,36 +82,65 @@ export interface HuntOptions {
 /**
  * One poll of the Livehunt notifications feed (newest first). The first run only records a
  * baseline. Afterwards every unseen notification is emitted once, oldest first.
- * Stops on a rate limit without marking anything it did not read as seen.
+ *
+ * A poll reads at most `maxPages` pages. When it cannot finish (page budget spent, or a rate
+ * limit), the cursor of the first unread page is kept in `state.pending` and read on a later
+ * poll, so a backlog is never skipped. Nothing it did not read is marked as seen.
  */
 export async function pollLivehunt(options: HuntOptions): Promise<IDataObject[]> {
 	const { state } = options;
 	const seen = new Set(state.seen);
 	const fresh: Notification[] = [];
 	const freshIds = new Set<string>();
-	let cursor: string | undefined;
+	let budget = Math.max(1, options.maxPages);
 	let pagesRead = 0;
+	let limited = false;
 
-	for (let page = 0; page < Math.max(1, options.maxPages); page++) {
-		const result = await options.fetchPage(cursor);
-		if (result.rateLimited) break;
-		pagesRead++;
+	/** Reads from `start` until a page holds an already-seen notification or the feed ends. */
+	const walk = async (start?: string): Promise<{ done: boolean; resume?: string }> => {
+		let cursor = start;
+		while (budget > 0) {
+			const result = await options.fetchPage(cursor);
+			if (result.rateLimited) {
+				limited = true;
+				return { done: false, resume: cursor };
+			}
+			budget--;
+			pagesRead++;
 
-		let allNew = result.items.length > 0;
-		for (const raw of result.items) {
-			const notification = toNotification(raw, options.thresholds);
-			if (!notification) continue;
-			if (seen.has(notification.id)) {
-				allNew = false;
-				continue;
+			let allNew = result.items.length > 0;
+			for (const raw of result.items) {
+				const notification = toNotification(raw, options.thresholds);
+				if (!notification) continue;
+				if (seen.has(notification.id)) {
+					allNew = false;
+					continue;
+				}
+				if (!freshIds.has(notification.id)) {
+					freshIds.add(notification.id);
+					fresh.push(notification);
+				}
 			}
-			if (!freshIds.has(notification.id)) {
-				freshIds.add(notification.id);
-				fresh.push(notification);
-			}
+			if (!allNew || !result.next) return { done: true };
+			cursor = result.next;
 		}
-		if (!result.next || !allNew) break;
-		cursor = result.next;
+		return { done: false, resume: cursor };
+	};
+
+	const pending: string[] = [];
+	const head = await walk(undefined);
+	if (!head.done && head.resume) pending.push(head.resume);
+
+	if (state.baselined) {
+		const older = [...state.pending];
+		for (let i = 0; i < older.length; i++) {
+			if (limited || budget <= 0) {
+				pending.push(...older.slice(i));
+				break;
+			}
+			const region = await walk(older[i]);
+			if (!region.done && region.resume) pending.push(region.resume);
+		}
 	}
 
 	const oldestFirst = [...fresh].reverse();
@@ -112,7 +149,9 @@ export async function pollLivehunt(options: HuntOptions): Promise<IDataObject[]>
 	if (!state.baselined) {
 		// Only a completed read may establish the baseline; a rate-limited first poll reads nothing.
 		state.baselined = pagesRead > 0;
+		state.pending = [];
 		return [];
 	}
+	state.pending = pending.slice(0, MAX_PENDING);
 	return oldestFirst.map((n) => n.item);
 }
