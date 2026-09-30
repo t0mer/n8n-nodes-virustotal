@@ -1,6 +1,7 @@
 import type { IDataObject, INodeProperties } from 'n8n-workflow';
 import { lookupOptionsProperty, readTyped, reportHandler, show } from '../lookup';
 import type { Relationship } from '../related';
+import { requirePremium } from '../premium';
 import { relatedHandler, relatedProperties } from '../related';
 import { analysisIdOf, finishScan, renderReport, scanProperties } from '../scan';
 import { uploadFile } from '../../../shared/upload';
@@ -39,6 +40,13 @@ const properties: INodeProperties[] = [
 				action: 'Get the behaviour summary of a file',
 				description:
 					'Get the merged sandbox behaviour (files, registry, network, processes) of a file',
+			},
+			{
+				name: 'Get Download URL',
+				value: 'getDownloadUrl',
+				action: 'Get the download URL of a file',
+				description:
+					'Premium only. Get a temporary URL to download the sample. The file itself is never downloaded by this node.',
 			},
 			{
 				name: 'Get MITRE ATT&CK',
@@ -145,6 +153,15 @@ export const fileResource: ResourceModule = {
 				throttle: ctx.throttle,
 			});
 			return body ? { found: true, hash, sandboxes: body.data ?? {} } : { found: false, hash };
+		},
+		async getDownloadUrl(ctx) {
+			requirePremium(ctx, 'Get Download URL');
+			const hash = readTyped(ctx, 'hash', 'file');
+			const body = await vtRequest<{ data?: string }>(ctx.fn, {
+				path: `${objectPath('file', hash)}/download_url`,
+				throttle: ctx.throttle,
+			});
+			return { hash, downloadUrl: body.data ?? null };
 		},
 		getRelated: relatedHandler('file', 'hash'),
 		getReport: reportHandler('file', 'hash'),
