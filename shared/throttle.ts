@@ -9,20 +9,22 @@ export const DEFAULT_REQUESTS_PER_MINUTE = 4;
  * The first request goes out immediately. Create one per execution and share it.
  */
 export class Throttle implements Waiter {
+	readonly requestsPerMinute: number;
+
 	readonly intervalMs: number;
 
 	private nextSlot = 0;
 
 	constructor(
-		readonly requestsPerMinute: number,
+		requestsPerMinute: number,
 		private readonly signal?: AbortSignal,
 		private readonly now: () => number = Date.now,
 	) {
-		const rpm =
+		this.requestsPerMinute =
 			Number.isFinite(requestsPerMinute) && requestsPerMinute > 0
 				? requestsPerMinute
 				: DEFAULT_REQUESTS_PER_MINUTE;
-		this.intervalMs = 60_000 / rpm;
+		this.intervalMs = 60_000 / this.requestsPerMinute;
 	}
 
 	async wait(): Promise<void> {

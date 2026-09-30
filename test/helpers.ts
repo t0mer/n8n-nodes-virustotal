@@ -65,6 +65,10 @@ export function fakeExecute(options: FakeExecuteOptions) {
 	});
 	fn.continueOnFail = () => options.continueOnFail ?? false;
 	fn.getExecutionCancelSignal = () => undefined;
+	(fn.helpers as Record<string, unknown>).assertBinaryData = (_i: number, property: string) => {
+		if (!options.binary?.[property]) throw new Error(`no binary data "${property}"`);
+		return { fileName: `${property}.bin`, mimeType: 'application/octet-stream' };
+	};
 	(fn.helpers as Record<string, unknown>).getBinaryDataBuffer = async (
 		_i: number,
 		property: string,
