@@ -45,7 +45,7 @@ describe('Search', () => {
 				operation: 'search',
 				query: 'x',
 				returnAll: false,
-				limit: 10,
+				limit: 3,
 				output: 'raw',
 			},
 			[ok(fixtures.searchResults)],
