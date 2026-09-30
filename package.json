@@ -44,7 +44,7 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "strict": true,
-    "credentials": [],
+    "credentials": ["dist/credentials/VirusTotalApi.credentials.js"],
     "nodes": [
       "dist/nodes/Example/Example.node.js"
     ]
