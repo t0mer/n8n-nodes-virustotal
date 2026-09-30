@@ -85,7 +85,20 @@ describe('File > Scan', () => {
 			data: EICAR,
 		});
 		expect(calls).toHaveLength(1);
-		expect(json).toMatchObject({ found: true, verdict: 'malicious', uploaded: false });
+		expect(json).toMatchObject({
+			found: true,
+			verdict: 'malicious',
+			uploaded: false,
+			analysisId: null,
+		});
+	});
+
+	it('Submit Only on a known file keeps the same keys, with analysisId null', async () => {
+		const { json, calls } = await run({ ...params, mode: 'submit' }, [ok(fixtures.fileMalicious)], {
+			data: EICAR,
+		});
+		expect(calls).toHaveLength(1);
+		expect(json).toMatchObject({ uploaded: false, analysisId: null, verdict: 'malicious' });
 	});
 
 	it('uploads an unknown file, waits and returns the report', async () => {

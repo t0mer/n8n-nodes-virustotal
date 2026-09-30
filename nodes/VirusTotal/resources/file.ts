@@ -188,7 +188,10 @@ export const fileResource: ResourceModule = {
 			});
 			ctx.setIndicator(result.sha256);
 			if (result.kind === 'existing') {
-				return renderReport(ctx, 'file', result.sha256, result.report, { uploaded: false });
+				return renderReport(ctx, 'file', result.sha256, result.report, {
+					uploaded: false,
+					analysisId: null,
+				});
 			}
 			return finishScan(ctx, 'file', result.sha256, result.analysisId, result.sha256, {
 				uploaded: true,

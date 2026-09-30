@@ -138,7 +138,7 @@ ambiguous input. A host with a path but no scheme, such as `example.com/login`, 
 **Scan** options:
 
 - **Mode**: `Wait for Result` (default) uploads, polls the analysis, then returns the file report. `Submit Only` returns the analysis id at once; use **Analysis → Get** later.
-- **Check Hash First** (default **on**): the SHA-256 is computed locally and looked up first. If VirusTotal already has a report, nothing is uploaded and the item carries `uploaded: false`. This saves quota and avoids sharing files VirusTotal already knows.
+- **Check Hash First** (default **on**): the SHA-256 is computed locally and looked up first. If VirusTotal already has a report, nothing is uploaded and the item carries `uploaded: false` and `analysisId: null` (in both modes, so downstream nodes can read `analysisId` either way). This saves quota and avoids sharing files VirusTotal already knows.
 - **Password**: for password-protected zip samples.
 - Files up to 32 MB are uploaded directly; files up to 650 MB use VirusTotal's one-time upload URL. Larger files fail before uploading.
 - Polling defaults to `max(20, 60 / requestsPerMinute × 1.5)` seconds, with a 10 minute timeout. On timeout the error contains the analysis id.
