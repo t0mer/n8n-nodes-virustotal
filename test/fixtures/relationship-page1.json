@@ -1,0 +1,11 @@
+{
+	"data": [
+		{ "id": "a.example.com", "type": "domain", "attributes": {} },
+		{ "id": "b.example.com", "type": "domain", "attributes": {} }
+	],
+	"meta": { "cursor": "CURSOR2", "count": 3 },
+	"links": {
+		"self": "https://www.virustotal.com/api/v3/domains/example.com/subdomains?limit=2",
+		"next": "https://www.virustotal.com/api/v3/domains/example.com/subdomains?cursor=CURSOR2&limit=2"
+	}
+}
