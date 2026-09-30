@@ -21,8 +21,8 @@
 #   1. Log in to npmjs.com and open your package's settings.
 #   2. Under "Publish access" → "Trusted Publishers", click "Add a publisher".
 #   3. Select GitHub Actions and fill in:
-#        Repository owner: <your-github-username-or-org>
-#        Repository name:  <your-repo-name>
+#        Repository owner: t0mer
+#        Repository name:  n8n-nodes-virustotal
 #        Workflow name:    publish.yml
 #        Environment:      (leave blank unless you use GitHub Environments)
 #   4. Leave the NPM_TOKEN secret unset in this repository. GitHub's OIDC
@@ -51,7 +51,6 @@
 #
 # This will lint, build, prompt for a version bump, update the changelog,
 # commit, tag, and push — which triggers this workflow to publish to npm.
-
 name: Publish
 
 on:
@@ -78,11 +77,25 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: 'npm ci'
+
+      - name: Set version from tag
+        # The pushed tag is the source of truth for the published version: package.json is
+        # not bumped in git, so write the tag's version into it before publishing.
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$TAG' is not a semver version (e.g. 2026.9.1)"
+            exit 1
+          fi
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          echo "Publishing version $VERSION"
 
       - name: Release
         # Publishes to npm with a provenance attestation (requires id-token: write above).
@@ -97,3 +110,45 @@ jobs:
           npm run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  scan:
+    # Separate job so the scanner never runs alongside the npm token or the OIDC permission.
+    name: Scan published package
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run the n8n Creator Portal scan
+        # Same static analysis the n8n Creator Portal uses for verification. Retries while
+        # the new version propagates through the npm registry. The scanner exits 0 even when
+        # the scan fails, so success is judged by its output, not its exit code.
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          PACKAGE="$NAME@${TAG#v}"
+          # After a package's first publish the registry answers 404 for its package document for
+          # several minutes, and the scanner fails until it appears. Wait for it (up to ~10 min).
+          DOC="https://registry.npmjs.org/$(node -p "encodeURIComponent(process.argv[1])" "$NAME")"
+          for i in $(seq 1 40); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' "$DOC")" = 200 ] && break
+            echo "Waiting for $NAME to appear on the registry ($i/40)"
+            sleep 15
+          done
+          for attempt in 1 2 3 4 5; do
+            OUTPUT="$(npx --yes @n8n/scan-community-package@0.37.0 "$PACKAGE" 2>&1 || true)"
+            echo "$OUTPUT"
+            if grep -q 'passed all security checks' <<<"$OUTPUT"; then exit 0; fi
+            echo "Scan attempt $attempt did not pass; retrying in 30s"
+            sleep 30
+          done
+          exit 1

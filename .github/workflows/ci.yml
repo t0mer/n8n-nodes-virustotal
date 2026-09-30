@@ -11,24 +11,58 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
-        run: 'npm ci'
+        run: npm ci
 
-      - name: Run lint
-        run: 'npm run lint'
+      - name: Lint
+        run: npm run lint
 
-      - name: Run build
-        run: 'npm run build'
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/pack"
+          npm pack --pack-destination "$RUNNER_TEMP/pack"
+          tar -xzf "$RUNNER_TEMP"/pack/*.tgz -C "$RUNNER_TEMP/pack"
+
+      - name: Scan with the n8n community package scanner
+        run: |
+          # Not a devDependency: its transitive deps trip npm audit.
+          npm install --no-save --ignore-scripts @n8n/scan-community-package@0.37.0
+          node scripts/scan-package.mjs "$GITHUB_WORKSPACE" "$RUNNER_TEMP/pack/package"
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
