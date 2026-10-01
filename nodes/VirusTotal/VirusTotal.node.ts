@@ -9,6 +9,7 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { createThrottle } from '../../shared/throttle';
 import { CREDENTIAL_NAME } from '../../shared/transport';
+import { batchOptionsProperty, checkQuotaBeforeBatch } from './quotaCheck';
 import { accountResource } from './resources/account';
 import { analysisResource } from './resources/analysis';
 import { commentResource } from './resources/comment';
@@ -69,7 +70,11 @@ export class VirusTotal implements INodeType {
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: CREDENTIAL_NAME, required: true }],
-		properties: [resourceProperty, ...Object.values(RESOURCES).flatMap((r) => r.properties)],
+		properties: [
+			resourceProperty,
+			...Object.values(RESOURCES).flatMap((r) => r.properties),
+			batchOptionsProperty,
+		],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -78,6 +83,8 @@ export class VirusTotal implements INodeType {
 		const throttle = await createThrottle(this);
 		const credentials = await this.getCredentials(CREDENTIAL_NAME);
 		const tier: Tier = credentials.tier === 'premium' ? 'premium' : 'public';
+
+		if (items.length > 0) await checkQuotaBeforeBatch(this, items.length, throttle);
 
 		for (let i = 0; i < items.length; i++) {
 			let indicator = '';
