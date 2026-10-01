@@ -1,0 +1,256 @@
+{
+  "name": "VirusTotal: Check an indicator from a webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Check a suspicious indicator\nPOST `{ \"indicator\": \"example[.]com\" }` to the webhook. VirusTotal **Indicator > Lookup** detects the type (hash, URL, domain, IP), accepts defanged input, and returns a verdict. An IF node branches on `verdict`, and the webhook answers with the result.\n\nAn indicator VirusTotal has never seen returns `verdict: unknown` and does not fail the run.\n\nSetup: select your VirusTotal API credential on the VirusTotal node. The public API allows 4 requests/min.",
+        "width": 520,
+        "height": 260
+      },
+      "id": "node-1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "virustotal-check",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        280
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "resource": "indicator",
+        "operation": "lookup",
+        "indicator": "={{ $json.body.indicator }}",
+        "forceType": "auto",
+        "options": {
+          "maliciousThreshold": 3,
+          "suspiciousThreshold": 1,
+          "onNotFound": "unknown",
+          "output": "summary"
+        }
+      },
+      "id": "node-3",
+      "name": "Lookup Indicator",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotal",
+      "typeVersion": 1,
+      "position": [
+        240,
+        280
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.verdict }}",
+              "rightValue": "malicious",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-4",
+      "name": "Is Malicious?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "action",
+              "value": "block",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "verdict",
+              "value": "={{ $json.verdict }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "detectionRatio",
+              "value": "={{ $json.detectionRatio }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "permalink",
+              "value": "={{ $json.permalink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-5",
+      "name": "Block Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        740,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "action",
+              "value": "allow",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "verdict",
+              "value": "={{ $json.verdict }}",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "indicator",
+              "value": "={{ $json.indicator }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-6",
+      "name": "Allow Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        740,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "node-7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Lookup Indicator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Indicator": {
+      "main": [
+        [
+          {
+            "node": "Is Malicious?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Malicious?": {
+      "main": [
+        [
+          {
+            "node": "Block Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Allow Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Block Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Allow Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

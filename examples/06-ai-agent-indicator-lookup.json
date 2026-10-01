@@ -1,0 +1,132 @@
+{
+  "name": "VirusTotal: AI agent that checks indicators",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## AI agent with VirusTotal as a tool\nThe VirusTotal node is connected to the AI Agent as a tool. The tool runs **Indicator > Lookup**; the agent fills the `indicator` field itself through `$fromAI`. Ask in the chat, for example: \"Is 44d88612fea8a8f36de82e1278abb02f safe?\"\n\nSetup: select your VirusTotal API credential and a chat model credential. The OpenAI chat model here is a placeholder; replace it with any chat model.",
+        "width": 560,
+        "height": 300
+      },
+      "id": "node-30",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "node-31",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000006"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a security assistant. Use the VirusTotal tool to check any file hash, URL, domain or IP address before answering. Report the verdict and the detection ratio, and say that the verdict is a heuristic."
+        }
+      },
+      "id": "node-32",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "node-33",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "indicator",
+        "operation": "lookup",
+        "indicator": "={{ $fromAI('indicator', 'The file hash, URL, domain or IP address to check', 'string') }}",
+        "forceType": "auto",
+        "options": {
+          "onNotFound": "unknown",
+          "output": "summary"
+        }
+      },
+      "id": "node-34",
+      "name": "VirusTotal Tool",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotalTool",
+      "typeVersion": 1,
+      "position": [
+        420,
+        540
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

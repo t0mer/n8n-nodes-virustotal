@@ -1,0 +1,141 @@
+{
+  "name": "VirusTotal: Scan a file (hash first, wait for result)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Scan an uploaded file\nPOST a file (multipart form field `data`) to the webhook. **File > Scan** with **Check Hash First** computes the SHA-256 locally and skips the upload when VirusTotal already has a report. With mode **Wait for Result** it polls the analysis and returns the finished report.\n\nPrivacy: files uploaded to VirusTotal are shared with the security community. Do not scan confidential files.\nFiles up to 650 MB are supported; the public API is rate limited.",
+        "width": 520,
+        "height": 300
+      },
+      "id": "node-8",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "virustotal-scan-file",
+        "responseMode": "lastNode",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "id": "node-9",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000002"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "scan",
+        "binaryPropertyName": "data",
+        "password": "",
+        "checkHashFirst": true,
+        "mode": "wait",
+        "scanOptions": {
+          "timeoutMinutes": 10
+        }
+      },
+      "id": "node-10",
+      "name": "Scan File",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotal",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "verdict",
+              "value": "={{ $json.verdict }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "detectionRatio",
+              "value": "={{ $json.detectionRatio }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "sha256",
+              "value": "={{ $json.sha256 }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "uploaded",
+              "value": "={{ $json.uploaded }}",
+              "type": "boolean"
+            },
+            {
+              "id": "a5",
+              "name": "permalink",
+              "value": "={{ $json.permalink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-11",
+      "name": "Pick Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Scan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scan File": {
+      "main": [
+        [
+          {
+            "node": "Pick Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

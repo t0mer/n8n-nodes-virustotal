@@ -1,0 +1,205 @@
+{
+  "name": "VirusTotal: Scan a URL before posting it",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Check a link before posting it\nPOST `{ \"url\": \"https://example.com/page\" }`. **URL > Scan** submits the URL and waits for the analysis. If the verdict is malicious or suspicious the link is rejected, otherwise it is approved for posting.\n\nPrivacy: submitted URLs become visible to VirusTotal users. Do not scan URLs that carry tokens or credentials in the query string. To only read an existing report without submitting, use **URL > Get Report** instead.",
+        "width": 520,
+        "height": 300
+      },
+      "id": "node-24",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "virustotal-check-link",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "node-25",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000005"
+    },
+    {
+      "parameters": {
+        "resource": "url",
+        "operation": "scan",
+        "url": "={{ $json.body.url }}",
+        "mode": "wait",
+        "scanOptions": {
+          "timeoutMinutes": 10
+        }
+      },
+      "id": "node-26",
+      "name": "Scan URL",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotal",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.verdict }}",
+              "rightValue": "clean",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-27",
+      "name": "Is Safe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "approved",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "a2",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-28",
+      "name": "Approve Link",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "approved",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "b2",
+              "name": "verdict",
+              "value": "={{ $json.verdict }}",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "permalink",
+              "value": "={{ $json.permalink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-29",
+      "name": "Reject Link",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Scan URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scan URL": {
+      "main": [
+        [
+          {
+            "node": "Is Safe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Safe?": {
+      "main": [
+        [
+          {
+            "node": "Approve Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

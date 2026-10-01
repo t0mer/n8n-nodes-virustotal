@@ -1,0 +1,104 @@
+{
+  "name": "VirusTotal: Notify when a watched indicator changes verdict",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Watch list notifications\nThe **VirusTotal Trigger** polls the reports of the watched indicators and fires when the verdict changes. It reads existing reports only; it never uploads or rescans. The first run only records a baseline. Each poll looks up at most **Max Lookups per Poll** indicators, round-robin, so long lists are covered over several polls.\n\nThe output includes `previousVerdict` and `previousStats`. Replace the placeholder Slack channel and select a Slack credential, or swap the node for Email or any other notification node.\n\nQuota math: 3 lookups every minute uses 4,320 requests per day, far above the public 500/day limit. Poll every 10 to 30 minutes on the public tier.",
+        "width": 600,
+        "height": 340
+      },
+      "id": "node-21",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "event": "watchedIndicatorChanged",
+        "indicators": {
+          "items": [
+            {
+              "value": "example.com"
+            },
+            {
+              "value": "8.8.8.8"
+            },
+            {
+              "value": "44d88612fea8a8f36de82e1278abb02f"
+            }
+          ]
+        },
+        "fireWhen": "verdictChanges",
+        "maxLookups": 3,
+        "options": {
+          "maliciousThreshold": 3,
+          "suspiciousThreshold": 1
+        },
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 30,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "node-22",
+      "name": "VirusTotal Trigger",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotalTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#security-alerts"
+        },
+        "text": "=VirusTotal verdict changed for {{ $json.indicator }}: {{ $json.previousVerdict }} -> {{ $json.verdict }} ({{ $json.detectionRatio }})\n{{ $json.permalink }}",
+        "otherOptions": {}
+      },
+      "id": "node-23",
+      "name": "Notify in Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        280,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "VirusTotal Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notify in Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

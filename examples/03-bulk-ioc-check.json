@@ -1,0 +1,197 @@
+{
+  "name": "VirusTotal: Bulk-check IOCs with a quota check",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Bulk-check a list of IOCs\nThe Code node emits one item per IOC. **Indicator > Lookup** processes the items one after another, spaced to the credential's Requests per Minute, so there are no 429 errors. **Batch Options > Check Quota Before Batch** is switched on: for a batch estimated at more than 10 requests, the node reads the daily quota once (1 request) and fails early if the remaining budget is too small. Continue On Fail turns per-item errors into output items. A final IF keeps only malicious and suspicious results.\n\nAt 4 requests/min on the public tier, 20 IOCs take about 5 minutes.",
+        "width": 600,
+        "height": 340
+      },
+      "id": "node-12",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-13",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Edit this list. The type of each IOC (hash, URL, domain, IP) is detected automatically.\nconst iocs = [\n  'example.com',\n  '8.8.8.8',\n  'hxxp://example[.]org/login',\n  '44d88612fea8a8f36de82e1278abb02f',\n];\nreturn iocs.map((indicator) => ({ json: { indicator } }));"
+      },
+      "id": "node-14",
+      "name": "IOC List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "indicator",
+        "operation": "lookup",
+        "indicator": "={{ $json.indicator }}",
+        "forceType": "auto",
+        "options": {
+          "maliciousThreshold": 3,
+          "suspiciousThreshold": 1,
+          "onNotFound": "unknown",
+          "output": "summary"
+        },
+        "batchOptions": {
+          "checkQuotaBeforeBatch": true
+        }
+      },
+      "id": "node-17",
+      "name": "Lookup Each IOC",
+      "type": "@t0mer/n8n-nodes-virustotal.virusTotal",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "virusTotalApi": {
+          "name": "VirusTotal API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.verdict }}",
+              "rightValue": "malicious",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.verdict }}",
+              "rightValue": "suspicious",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "node-18",
+      "name": "Needs Attention?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-19",
+      "name": "Flagged IOCs",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        220
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-20",
+      "name": "Clean or Unknown",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "IOC List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IOC List": {
+      "main": [
+        [
+          {
+            "node": "Lookup Each IOC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Each IOC": {
+      "main": [
+        [
+          {
+            "node": "Needs Attention?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Attention?": {
+      "main": [
+        [
+          {
+            "node": "Flagged IOCs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clean or Unknown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
