@@ -1,0 +1,15 @@
+{
+	"node": "@t0mer/n8n-nodes-virustotal.virusTotal",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Development", "Utility"],
+	"alias": ["VirusTotal", "VT", "IOC", "Malware", "Hash", "Threat Intelligence", "Security", "Scan"],
+	"resources": {
+		"credentialDocumentation": [
+			{ "url": "https://github.com/t0mer/n8n-nodes-virustotal#credentials" }
+		],
+		"primaryDocumentation": [
+			{ "url": "https://github.com/t0mer/n8n-nodes-virustotal#readme" }
+		]
+	}
+}

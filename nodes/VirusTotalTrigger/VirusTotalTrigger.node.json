@@ -1,0 +1,15 @@
+{
+	"node": "@t0mer/n8n-nodes-virustotal.virusTotalTrigger",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Development", "Utility"],
+	"alias": ["VirusTotal", "VT", "IOC", "Malware", "Livehunt", "Monitor", "Security", "Watch"],
+	"resources": {
+		"credentialDocumentation": [
+			{ "url": "https://github.com/t0mer/n8n-nodes-virustotal#credentials" }
+		],
+		"primaryDocumentation": [
+			{ "url": "https://github.com/t0mer/n8n-nodes-virustotal#virustotal-trigger" }
+		]
+	}
+}
