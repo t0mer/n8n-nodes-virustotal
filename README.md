@@ -17,6 +17,13 @@ can branch on, and includes a **polling trigger** that fires when a watched indi
 [Compatibility](#compatibility) ·
 [Development](#development)
 
+## Demo
+
+[![Demo video](https://raw.githubusercontent.com/t0mer/n8n-nodes-virustotal/main/assets/demo/poster.png)](https://github.com/t0mer/n8n-nodes-virustotal/blob/main/assets/demo/demo.mp4)
+
+Click the image to watch the demo: indicator lookup with a normalized verdict, a defanged URL, an unknown hash and the
+quota check. Importable example workflows are in [`examples/`](examples/README.md).
+
 ## Why this node
 
 n8n core ships only a credential for VirusTotal, to be used with the HTTP Request node. It has no operations.
@@ -114,7 +121,14 @@ Per type, the Summary adds:
 - **ip_address**: `asn`, `asOwner`, `country`, `network`, `regionalInternetRegistry`
 
 Items are processed **one at a time**, through the throttle. `Continue On Fail` is supported: a failed item becomes
-`{ error, indicator }` (plus `statusCode` for API errors). `pairedItem` is kept on every output item.
+`{ error, indicator }` (plus `statusCode` for API errors). `pairedItem` is kept on every output item. The optional quota
+check below runs before any item and, if it fails, stops the whole run regardless of `Continue On Fail`.
+
+The node also has a **Batch Options** collection with **Check Quota Before Batch** (default off). When on, and the batch is
+estimated at more than 10 requests, the node reads your quota once (one request, through the throttle) and fails before
+processing any item if the remaining `api_requests_daily` budget is smaller than the estimate. The estimate is
+deliberately rough: 1 request per item, 5 per scan or rescan that waits for the result, 2 per scan that only submits,
+and 3 for an operation set to Return All.
 
 ### Indicator
 
