@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.10.3 - 2026-10-10
+
+### Fixed
+- `package.json` at the tagged commit now carries the released version. Tags 2026.10.0 to
+  2026.10.2 pointed at commits that still read 2026.9.0, so the published package could not
+  be matched to its source.
+
+### Added
+- Codex files for both nodes.
+
 ## 2026.10.0 - 2026-10-01
 
 First release.

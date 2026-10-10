@@ -1,6 +1,6 @@
 {
   "name": "@t0mer/n8n-nodes-virustotal",
-  "version": "2026.9.0",
+  "version": "2026.10.3",
   "description": "n8n community node for the VirusTotal API v3: look up and scan files, URLs, domains and IPs, get a normalized verdict, and watch indicators for changes.",
   "license": "MIT",
   "homepage": "https://github.com/t0mer/n8n-nodes-virustotal#readme",
