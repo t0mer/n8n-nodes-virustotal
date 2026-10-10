@@ -84,8 +84,8 @@ jobs:
         run: 'npm ci'
 
       - name: Set version from tag
-        # The pushed tag is the source of truth for the published version: package.json is
-        # not bumped in git, so write the tag's version into it before publishing.
+        # Safety net only: package.json is bumped and committed before the tag is created,
+        # so the tagged commit already matches. The Creator Portal compares the two.
         env:
           TAG: ${{ github.ref_name }}
         run: |
